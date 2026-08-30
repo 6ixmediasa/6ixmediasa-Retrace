@@ -1,0 +1,24 @@
+name: Build Retrace Windows
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Restore
+        run: dotnet restore src/Retrace.App/Retrace.App.csproj
+      - name: Publish Windows x64
+        run: dotnet publish src/Retrace.App/Retrace.App.csproj -c Release -r win-x64 --self-contained true -o dist/Retrace -p:PublishReadyToRun=false
+      - name: Package
+        shell: pwsh
+        run: Compress-Archive -Path dist/Retrace/* -DestinationPath dist/Retrace-Windows-x64.zip -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Retrace-Windows-x64
+          path: dist/Retrace-Windows-x64.zip
